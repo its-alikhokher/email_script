@@ -1,0 +1,10 @@
+1. If you don't have Python installed, download and install it from the official Python website: https://www.python.org/downloads/
+
+2. Run the "install.bat" file to install all the necessary Python libraries for the script to function properly.
+
+3. Open the "websites.txt" file in a text editor. Here, add the list of websites you want the script to scrape for email addresses. Ensure each website URL is entered on a new line. Save and close the file after you have added all the desired websites.
+for Windows   : pip install requests
+for Mac   : pip3 install requests
+4. (Optional) Edit the "email_prefixs.txt" file to change the email prefix as you need.
+
+5. Finally, to start the email scraping process, run the "run.bat" file.
