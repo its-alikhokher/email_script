@@ -58,9 +58,11 @@ def extract_data(url):
         return set(), set()
 
 def main():
-    input_file = "/home/ahmed/email_script/Script_for_emails/sheets.xlsx"
-    output_file = "consolidated_output.txt"
+    input_file = "/home/ahmed/email_script/Script_for_emails/sheet_urls.xlsx"
+    output_file = "consolidated_output.xlsx"
     failed_urls_file = "failed_urls.txt"
+
+    results = []
 
     try:
         df = pd.read_excel(input_file)
@@ -68,35 +70,38 @@ def main():
         urls = df[url_columns].fillna('').values.flatten()
         urls = list(filter(None, urls)) 
 
-        with open(output_file, 'w') as output, open(failed_urls_file, 'w') as failed_log:
-            for url in urls:
-                if not url.startswith("http"):
-                    url = f"http://{url}"
+        failed_urls = []
 
-                domain = tld_extract(url).domain
+        for url in urls:
+            if not url.startswith("http"):
+                url = f"http://{url}"
 
-                phones, emails = extract_data(url)
-                if not emails:
-                    for prefix in priority_keywords:
-                        test_email = f"{prefix}@{domain}.se"
-                        emails.add(test_email)
+            domain = tld_extract(url).domain
 
-                priority_emails = {email for email in emails if any(k in email.lower() for k in priority_keywords) or ".se" in email}
-                other_emails = emails - priority_emails
-                output.write(f"Hemsida: {url}\n")
-                if phones:
-                    output.write(f"Telefonnummer: {', '.join(sorted(phones))}\n")
-                else:
-                    output.write("Telefonnummer: No phone numbers found\n") 
-                if priority_emails:
-                    output.write(f"Prioriterade e-postadresser: {', '.join(sorted(priority_emails))}\n")
-                else:
-                    output.write("Prioriterade e-postadresser: No priority emails found\n")
-                if other_emails:
-                    output.write(f"Andra e-postadresser: {', '.join(sorted(other_emails))}\n")
-                else:
-                    output.write("Andra e-postadresser: No other emails found\n")
-                output.write("\n")
+            phones, emails = extract_data(url)
+            if not emails:
+                for prefix in priority_keywords:
+                    test_email = f"{prefix}@{domain}.se"
+                    emails.add(test_email)
+
+            priority_emails = {email for email in emails if any(k in email.lower() for k in priority_keywords) or ".se" in email}
+            other_emails = emails - priority_emails
+
+            results.append({
+                "Hemsida": url,
+                "Telefonnummer": ", ".join(sorted(phones)) if phones else "No phone numbers found",
+                "Prioriterade e-postadresser": ", ".join(sorted(priority_emails)) if priority_emails else "No priority emails found",
+                "Andra e-postadresser": ", ".join(sorted(other_emails)) if other_emails else "No other emails found"
+            })
+
+        # Save results to Excel
+        results_df = pd.DataFrame(results)
+        results_df.to_excel(output_file, index=False)
+
+        # Save failed URLs
+        with open(failed_urls_file, 'w') as failed_log:
+            for failed_url in failed_urls:
+                failed_log.write(f"{failed_url}\n")
 
         print(f"Results saved to {output_file}")
         print(f"Failed URLs logged to {failed_urls_file}")
