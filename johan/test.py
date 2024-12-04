@@ -2,6 +2,7 @@ import re
 import requests
 from requests_html import HTMLSession
 from bs4 import BeautifulSoup
+import html
 import pandas as pd
 from urllib.parse import urlparse
 from tldextract import extract as tld_extract
@@ -38,8 +39,7 @@ def fetch_with_retry(url, retries=2, timeout=5):
 
 # Normalize phone numbers (remove unnecessary spaces or characters)
 def normalize_phones(phones):
-    # Flatten the tuple data, extracting non-empty phone numbers
-    return {re.sub(r'[\s\-–]+', ' ', phone).strip() for phone_tuple in phones for phone in phone_tuple if phone}
+    return {re.sub(r'[\s\-–]+', ' ', phone).strip() for phone in phones if phone}
 
 # Extract phones and emails
 def extract_data(url):
@@ -54,10 +54,9 @@ def extract_data(url):
 
         # Extract phone numbers
         phones = set(re.findall(phone_pattern, text, re.VERBOSE))
-        print(f"Extracted phones (raw): {phones}")  # Debug print to check raw phone numbers
+        print(f"Extracted phones: {phones}")  # Debug print statement
 
         normalized_phones = normalize_phones(phones)
-        print(f"Normalized phones: {normalized_phones}")  # Debug print to check normalized phone numbers
 
         # Extract emails
         emails = set(re.findall(email_pattern, text))
@@ -68,12 +67,11 @@ def extract_data(url):
 
 # Main function
 def main():
-    input_file = "/home/ahmed/email_script/Script_for_emails/sheets.xlsx"
+    input_file = "/home/ahmed/email_script/Script_for_emails/sheets.xlsx"  # Input Excel file
     output_file = "consolidated_output.txt"
     failed_urls_file = "failed_urls.txt"
 
     try:
-        # Load the Excel file
         df = pd.read_excel(input_file)
         url_columns = [col for col in df.columns if "website" in col.lower() or "homepage" in col.lower()]
         urls = df[url_columns].fillna('').values.flatten()
@@ -84,13 +82,11 @@ def main():
                 # Ensure proper URL format
                 if not url.startswith("http"):
                     url = f"http://{url}"
-
                 domain = tld_extract(url).domain
 
                 # Extract data
                 phones, emails = extract_data(url)
                 if not emails:
-                    # Add priority email suggestions if no emails found
                     for prefix in priority_keywords:
                         test_email = f"{prefix}@{domain}.se"
                         emails.add(test_email)
@@ -103,16 +99,10 @@ def main():
                 output.write(f"Hemsida: {url}\n")
                 if phones:
                     output.write(f"Telefonnummer: {', '.join(sorted(phones))}\n")
-                else:
-                    output.write("Telefonnummer: No phone numbers found\n")  # If no phones found
                 if priority_emails:
                     output.write(f"Prioriterade e-postadresser: {', '.join(sorted(priority_emails))}\n")
-                else:
-                    output.write("Prioriterade e-postadresser: No priority emails found\n")
                 if other_emails:
                     output.write(f"Andra e-postadresser: {', '.join(sorted(other_emails))}\n")
-                else:
-                    output.write("Andra e-postadresser: No other emails found\n")
                 output.write("\n")
 
         print(f"Results saved to {output_file}")

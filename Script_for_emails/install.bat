@@ -1,2 +1,2 @@
-pip install setuptools requests bs4 playwright
-playwright install
+pip install requests_html beautifulsoup4 pandas tldextract openpyxl
+

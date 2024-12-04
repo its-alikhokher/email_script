@@ -38,8 +38,7 @@ def fetch_with_retry(url, retries=2, timeout=5):
 
 # Normalize phone numbers (remove unnecessary spaces or characters)
 def normalize_phones(phones):
-    # Flatten the tuple data, extracting non-empty phone numbers
-    return {re.sub(r'[\s\-–]+', ' ', phone).strip() for phone_tuple in phones for phone in phone_tuple if phone}
+    return {re.sub(r'[\s\-–]+', ' ', phone).strip() for phone in phones if phone}
 
 # Extract phones and emails
 def extract_data(url):
@@ -107,12 +106,8 @@ def main():
                     output.write("Telefonnummer: No phone numbers found\n")  # If no phones found
                 if priority_emails:
                     output.write(f"Prioriterade e-postadresser: {', '.join(sorted(priority_emails))}\n")
-                else:
-                    output.write("Prioriterade e-postadresser: No priority emails found\n")
                 if other_emails:
                     output.write(f"Andra e-postadresser: {', '.join(sorted(other_emails))}\n")
-                else:
-                    output.write("Andra e-postadresser: No other emails found\n")
                 output.write("\n")
 
         print(f"Results saved to {output_file}")
